@@ -28,7 +28,7 @@ def run(argv: Optional[list[str]] = None) -> int:
             print("Unable to launch a graphical interface in this environment.")
             return 1
 
-    return launch_qt(create_default_table(), argv)
+    return launch_qt(argv)
 
 
 __all__ = ["run", "TableManager"]

@@ -10,7 +10,7 @@ from .widgets import CardLabel
 
 
 class TableWindow(QtWidgets.QMainWindow):
-    def __init__(self, manager: TableManager) -> None:
+    def __init__(self, manager: TableManager, source: str | None = None) -> None:
         super().__init__()
         self.manager = manager
         self.setWindowTitle("Hold'em Poker")
@@ -18,7 +18,10 @@ class TableWindow(QtWidgets.QMainWindow):
         self.view = TableView(manager)
         self.setCentralWidget(self.view)
         self.status = self.statusBar()
-        self.status.showMessage("Welcome to Hold'em Poker")
+        if source:
+            self.status.showMessage(f"Loaded configuration from {source}")
+        else:
+            self.status.showMessage("Welcome to Hold'em Poker")
 
 
 class TableView(QtWidgets.QWidget):

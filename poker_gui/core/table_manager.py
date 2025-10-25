@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 
 from .ai import DecisionEngine
 from .game import PlayerAction, Street, TableState
@@ -21,6 +21,32 @@ class TableConfig:
     starting_stack: int = 200
     blinds: BlindStructure = field(default_factory=lambda: BlindStructure(1, 2, 0))
     tournament: bool = False
+    players: List[Dict[str, Any]] | None = None
+
+    @classmethod
+    def from_dict(cls, payload: Dict[str, Any]) -> "TableConfig":
+        name = payload.get("table_name") or payload.get("name") or "Main Table"
+        seats = int(payload.get("seats", 6))
+        starting_stack = int(payload.get("starting_stack", 200))
+        blinds_data = payload.get("blinds", {})
+        small = int(blinds_data.get("small") or blinds_data.get("small_blind") or 1)
+        big = int(blinds_data.get("big") or blinds_data.get("big_blind") or 2)
+        ante = int(blinds_data.get("ante", 0))
+        game_type = str(payload.get("game_type", "")).lower()
+        tournament = bool(payload.get("tournament", False) or game_type == "tournament")
+        players = payload.get("players")
+        if isinstance(players, list):
+            seats = max(seats, len(players))
+        else:
+            players = None
+        return cls(
+            name=str(name),
+            seats=seats,
+            starting_stack=starting_stack,
+            blinds=BlindStructure(small, big, ante),
+            tournament=tournament,
+            players=players,
+        )
 
 
 class TableManager:
@@ -33,7 +59,11 @@ class TableManager:
         self.hand_number = 0
         self._load_default_players()
 
-    def _load_default_players(self) -> None:
+    def _player_entries(self) -> Iterable[Dict[str, Any]]:
+        if self.config.players:
+            yield from self.config.players
+            return
+
         default_players_path = DATA_PATH / "default_players.json"
         if default_players_path.exists():
             profile_data = json.loads(default_players_path.read_text())
@@ -45,17 +75,21 @@ class TableManager:
                     {"type": "ai", "name": "Blake", "profile": "Solid"},
                 ]
             }
+        yield from profile_data.get("seats", [])
+
+    def _load_default_players(self) -> None:
+        entries = list(self._player_entries())
         for seat in range(self.config.seats):
-            if seat < len(profile_data["seats"]):
-                entry = profile_data["seats"][seat]
+            if seat < len(entries):
+                entry = entries[seat]
             else:
                 entry = {"type": "ai", "name": f"Bot {seat+1}", "profile": "Casual"}
-            if entry["type"] == "human":
-                player = HumanPlayer(seat=seat, name=entry["name"], stack=self.config.starting_stack)
+            if entry.get("type") == "human":
+                player = HumanPlayer(seat=seat, name=entry.get("name", "You"), stack=self.config.starting_stack)
             else:
                 player = AIPlayer(
                     seat=seat,
-                    name=entry["name"],
+                    name=entry.get("name", f"Bot {seat+1}"),
                     stack=self.config.starting_stack,
                     strategy=entry.get("profile"),
                 )
@@ -152,4 +186,23 @@ def create_default_table() -> TableManager:
     return TableManager(TableConfig())
 
 
-__all__ = ["TableManager", "TableConfig", "create_default_table"]
+def load_table_config(path: Path) -> TableConfig:
+    payload = json.loads(Path(path).read_text())
+    if not isinstance(payload, dict):
+        raise ValueError("Configuration file must contain a JSON object")
+    return TableConfig.from_dict(payload)
+
+
+def create_table_from_file(path: Path) -> TableManager:
+    config = load_table_config(path)
+    return TableManager(config)
+
+
+__all__ = [
+    "TableManager",
+    "TableConfig",
+    "create_default_table",
+    "load_table_config",
+    "create_table_from_file",
+    "DATA_PATH",
+]
