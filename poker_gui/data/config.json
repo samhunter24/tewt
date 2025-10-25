@@ -1,0 +1,11 @@
+{
+  "table_name": "Main Table",
+  "seats": 6,
+  "starting_stack": 200,
+  "game_type": "cash",
+  "blinds": {
+    "small": 1,
+    "big": 2,
+    "ante": 0
+  }
+}

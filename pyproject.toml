@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "poker_gui"
+version = "0.1.0"
+description = "Texas Hold'em poker GUI with AI opponents"
+authors = [{name = "OpenAI Codex"}]
+readme = "poker_gui/README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+]
+
+[project.urls]
+Home = "https://example.com/poker_gui"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["poker_gui*"]

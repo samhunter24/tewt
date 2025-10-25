@@ -1,0 +1,10 @@
+{
+  "seats": [
+    {"type": "human", "name": "You"},
+    {"type": "ai", "name": "Ava", "profile": "Casual"},
+    {"type": "ai", "name": "Blake", "profile": "Solid"},
+    {"type": "ai", "name": "Chloe", "profile": "Casual"},
+    {"type": "ai", "name": "Dylan", "profile": "Solid"},
+    {"type": "ai", "name": "Eli", "profile": "Casual"}
+  ]
+}
